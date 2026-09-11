@@ -1,17 +1,13 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import GitHub from "next-auth/providers/github";
-import { PrismaAdapter } from "@auth/prisma-adapter";
-import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/prisma";
+import { verifyCredentials } from "@/lib/api";
 
 /**
- * NextAuth configuration for authentication.
- * This configuration uses Prisma as the adapter and supports GitHub and Credentials providers.
- * The session strategy is set to JWT.
+ * NextAuth configuration for the frontend application.
+ * Uses JWT session strategy and validates credentials via the backend API.
  */
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
   providers: [
     GitHub,
     Credentials({
@@ -24,27 +20,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email as string },
-        });
-
-        if (!user || !user.password) {
-          return null;
-        }
-
-        const passwordsMatch = await bcrypt.compare(
-          credentials.password as string,
-          user.password
+        const user = await verifyCredentials(
+          credentials.email as string,
+          credentials.password as string
         );
 
-        if (!passwordsMatch) {
+        if (!user) {
           return null;
         }
 
         return {
           id: user.id,
           email: user.email,
-          name: user.name,
+          name: user.name ?? undefined,
         };
       },
     }),
@@ -58,14 +46,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.email = user.email;
+        token.name = user.name;
       }
+
       return token;
     },
+
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
+        session.user.email = token.email as string;
+        session.user.name = token.name;
       }
-      return session;
-    }}
-});
 
+      return session;
+    },
+  },
+});

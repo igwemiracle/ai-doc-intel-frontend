@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { getDocuments } from "@/lib/api";
 import { DocumentList } from "@/components/document-list";
 
 export default async function DocumentsPage() {
@@ -10,21 +10,7 @@ export default async function DocumentsPage() {
     redirect("/login");
   }
 
-  const documents = await prisma.document.findMany({
-    where: { userId: session.user.id },
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      fileName: true,
-      fileSize: true,
-      createdAt: true,
-      status: true,
-      errorMessage: true,
-      _count: {
-        select: { chunks: true },
-      },
-    },
-  });
+  const documents = await getDocuments(session.user.id);
 
   return <DocumentList documents={documents} />;
 }

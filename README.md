@@ -89,28 +89,24 @@ Working style in both: slow, deliberate pair-programming. Concepts are explained
 
 ---
 
-## Local setup
+## Local setup (Frontend)
 
 ```bash
 git clone <repo-url>
-cd ai-doc-intel
+cd ai-doc-intel-frontend
 npm install
 ```
 
 Create a `.env.local` with:
-```
-DATABASE_URL=          # Neon pooled connection string
-DIRECT_URL=            # Neon direct connection string (for migrations)
-AUTH_SECRET=           # generate via: npx auth secret
+```env
+NEXT_PUBLIC_BACKEND_URL=http://localhost:8000 # URL of your separate backend service
+AUTH_SECRET=                                 # generate via: npx auth secret
 GITHUB_ID=
 GITHUB_SECRET=
-OPENAI_API_KEY=        # from Phase 4 onward
-# R2 / Redis vars added in later phases
 ```
 
 ```bash
-npx prisma migrate dev
 npm run dev
 ```
 
-Visit `http://localhost:3000/signup` to create an account.
+Visit `http://localhost:3000` to start exploring the application.

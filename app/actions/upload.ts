@@ -1,8 +1,7 @@
 "use server";
 
 import { auth } from "@/auth";
-import { supabase } from "@/lib/supabase";
-import { prisma } from "@/lib/prisma";
+import { uploadDocumentApi } from "@/lib/api";
 
 export async function uploadDocument(
   prevState: { error?: string; success?: boolean } | undefined,
@@ -27,24 +26,5 @@ export async function uploadDocument(
     return { error: "File is too large. Max size is 20MB." };
   }
 
-  const storageKey = `${session.user.id}/${crypto.randomUUID()}-${file.name}`;
-
-  const { error: uploadError } = await supabase.storage
-    .from("documents")
-    .upload(storageKey, file);
-
-  if (uploadError) {
-    return { error: "Upload failed. Please try again." };
-  }
-
-  await prisma.document.create({
-    data: {
-      userId: session.user.id,
-      fileName: file.name,
-      fileSize: file.size,
-      storageKey,
-    },
-  });
-
-  return { success: true };
+  return await uploadDocumentApi(file, session.user.id);
 }

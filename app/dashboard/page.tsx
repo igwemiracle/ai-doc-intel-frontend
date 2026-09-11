@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { prisma } from "@/lib/prisma";
+import { getDashboardMetrics } from "@/lib/api";
 import { formatFileSize, formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,38 +36,17 @@ export default async function DashboardPage() {
   }
 
   const userId = session.user.id;
+  console.log("USER Email", session.user.email?.split("@")[0])
+  console.log("user id: ", userId)
+  console.log("SESSION USER:", session.user);
 
-  const [documentsCount, processedCount, totalChunks, storageAggregate, recentDocs] =
-    await Promise.all([
-      prisma.document.count({ where: { userId } }),
-      prisma.document.count({ where: { userId, status: "COMPLETED" } }),
-      prisma.chunk.count({
-        where: {
-          document: { userId },
-        },
-      }),
-      prisma.document.aggregate({
-        where: { userId },
-        _sum: { fileSize: true },
-      }),
-      prisma.document.findMany({
-        where: { userId },
-        orderBy: { createdAt: "desc" },
-        take: 5,
-        select: {
-          id: true,
-          fileName: true,
-          fileSize: true,
-          status: true,
-          createdAt: true,
-          _count: {
-            select: { chunks: true },
-          },
-        },
-      }),
-    ]);
-
-  const totalSizeBytes = storageAggregate._sum.fileSize ?? 0;
+  const {
+    documentsCount,
+    processedCount,
+    totalChunks,
+    totalSizeBytes,
+    recentDocs,
+  } = await getDashboardMetrics(userId);
 
   return (
     <div className="space-y-8">

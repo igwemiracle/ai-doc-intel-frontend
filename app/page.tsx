@@ -209,7 +209,7 @@ export default async function Home() {
             <span className="text-xs text-muted-foreground">• Learning & Research Stack</span>
           </div>
           <p className="text-xs text-muted-foreground">
-            Next.js 16 • React 19 • Prisma 6 • pgvector • Tailwind CSS v4
+            Next.js 16 • React 19 • Tailwind CSS v4 • shadcn/ui
           </p>
         </div>
       </footer>
